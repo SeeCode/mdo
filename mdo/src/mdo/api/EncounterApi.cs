@@ -1,21 +1,3 @@
-#region CopyrightHeader
-//
-//  Copyright by Contributors
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//         http://www.apache.org/licenses/LICENSE-2.0.txt
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-#endregion
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -34,6 +16,16 @@ namespace gov.va.medora.mdo.api
         public IndexedHashtable getAppointments(ConnectionSet cxns)
         {
             return cxns.query(DAO_NAME, "getAppointments", new object[] { });
+        }
+
+        public IndexedHashtable getMentalHealthAppointments(ConnectionSet cxns)
+        {
+            return cxns.query(DAO_NAME, "getMentalHealthAppointments", new object[] { });
+        }
+
+        public IndexedHashtable getMentalHealthVisits(ConnectionSet cxns)
+        {
+            return cxns.query(DAO_NAME, "getMentalHealthVisits", new object[] { });
         }
 
         public Dictionary<string, HashSet<string>> getUpdatedFutureAppointments(AbstractConnection cxn, DateTime updatedSince)
@@ -336,5 +328,61 @@ namespace gov.va.medora.mdo.api
         {
             return ((IEncounterDao)cxn.getDao(DAO_NAME)).getSiteDivisions(siteId);
         }
+
+        public IList<Appointment> getPendingAppointments(AbstractConnection cxn, string startDate)
+        {
+            return ((ISchedulingDao)cxn.getDao("ISchedulingDao")).getPendingAppointments(startDate);
+        }
+
+        public IList<AppointmentType> getAppointmentTypes(AbstractConnection cxn, string target)
+        {
+            return ((ISchedulingDao)cxn.getDao("ISchedulingDao")).getAppointmentTypes(target);
+        }
+
+        //public string getClinicAvailability(AbstractConnection cxn, string clinicId)
+        //{
+        //    return ((ISchedulingDao)cxn.getDao("ISchedulingDao")).getClinicAvailability(clinicId);
+        //}
+
+        public Appointment makeAppointment(AbstractConnection cxn, Appointment appointment)
+        {
+            return ((ISchedulingDao)cxn.getDao("ISchedulingDao")).makeAppointment(appointment);
+        }
+
+        public Appointment cancelAppointment(AbstractConnection cxn, Appointment appointment, string cancellationReason, string remarks)
+        {
+            return ((ISchedulingDao)cxn.getDao("ISchedulingDao")).cancelAppointment(appointment, cancellationReason, remarks);
+        }
+
+        public Appointment checkInAppointment(AbstractConnection cxn, Appointment appointment)
+        {
+            return ((ISchedulingDao)cxn.getDao("ISchedulingDao")).checkInAppointment(appointment);
+        }
+
+        public HospitalLocation getClinicSchedulingDetails(AbstractConnection cxn, string clinicId)
+        {
+            return ((ISchedulingDao)cxn.getDao("ISchedulingDao")).getClinicSchedulingDetails(clinicId);
+        }
+
+        public bool hasClinicAccess(AbstractConnection cxn, string clinicId)
+        {
+            return ((ISchedulingDao)cxn.getDao("ISchedulingDao")).hasClinicAccess(clinicId);
+        }
+
+        public bool hasValidStopCode(AbstractConnection cxn, string clinicId)
+        {
+            return ((ISchedulingDao)cxn.getDao("ISchedulingDao")).hasValidStopCode(clinicId);
+        }
+
+        public bool isValidStopCode(AbstractConnection cxn, string stopCodeId)
+        {
+            return ((ISchedulingDao)cxn.getDao("ISchedulingDao")).isValidStopCode(stopCodeId);
+        }
+
+        public Dictionary<string, string> getCancellationReasons(AbstractConnection cxn)
+        {
+            return ((ISchedulingDao)cxn.getDao("ISchedulingDao")).getCancellationReasons();
+        }
+
     }
 }

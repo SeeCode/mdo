@@ -30,8 +30,22 @@ namespace gov.va.medora.mdo
         string timestamp;
         Author author;
         SiteId facility;
+        string _type;
+        string _text;
 
         public Report() { }
+
+        public string Text
+        {
+            get { return _text; }
+            set { _text = value; }
+        }
+
+        public string Type
+        {
+            get { return _type; }
+            set { _type = value; }
+        }
 
         public string CaseNumber
         {

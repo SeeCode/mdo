@@ -382,6 +382,7 @@
     <Compile Include="src\mdo\IvSolution.cs" />
     <Compile Include="src\mdo\LabObservation.cs" />
     <Compile Include="src\mdo\LabObservationType.cs" />
+    <Compile Include="src\mdo\LabPanel.cs" />
     <Compile Include="src\mdo\LabReport.cs" />
     <Compile Include="src\mdo\LabResult.cs" />
     <Compile Include="src\mdo\LabSpecimen.cs" />
