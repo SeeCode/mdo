@@ -111,5 +111,15 @@ namespace gov.va.medora.mdo.dao.hl7.rxRefill
             IsConnected = false;
             _socket.Disconnect(false);
         }
+
+        public override Dictionary<string, object> getState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void setState(Dictionary<string, object> session)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

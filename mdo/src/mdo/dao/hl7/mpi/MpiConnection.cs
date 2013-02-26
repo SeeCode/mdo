@@ -216,5 +216,15 @@ namespace gov.va.medora.mdo.dao.hl7.mpi
         {
             throw new NotImplementedException();
         }
+
+        public override Dictionary<string, object> getState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void setState(Dictionary<string, object> session)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

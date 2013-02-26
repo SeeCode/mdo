@@ -1,22 +1,4 @@
-﻿#region CopyrightHeader
-//
-//  Copyright by Contributors
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//         http://www.apache.org/licenses/LICENSE-2.0.txt
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-#endregion
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,6 +10,8 @@ namespace gov.va.medora.mdo.dao.mock
 {
     public class XSqliteConnection : AbstractConnection, IDisposable
     {
+        static string _sqliteDbPath;
+
         public bool SaveResults { get; set; }
         public bool UpdateResults { get; set; }
 
@@ -39,7 +23,21 @@ namespace gov.va.medora.mdo.dao.mock
         {
             if (src == null || String.IsNullOrEmpty(src.ConnectionString))
             {
-                throw new ArgumentNullException("Must supply a connection string");
+                DataSource newSrc = new DataSource() { ConnectionString = new sqlite.SqliteDao().getResourcesPath() };
+                if (src != null)
+                {
+                    newSrc.IsTestSource = src.IsTestSource;
+                    newSrc.Modality = src.Modality;
+                    newSrc.Password = src.Password;
+                    newSrc.Port = src.Port;
+                    newSrc.Protocol = src.Protocol;
+                    newSrc.SiteId = src.SiteId;
+                }
+                src = newSrc;
+            }
+            if (String.IsNullOrEmpty(_sqliteDbPath))
+            {
+                _sqliteDbPath = src.ConnectionString;
             }
             _src = src;
             _cxn = new SQLiteConnection(src.ConnectionString);
@@ -55,15 +53,21 @@ namespace gov.va.medora.mdo.dao.mock
             if (!IsConnected)
             {
                 _cxn.Open();
+                IsConnected = true;
             }
+        }
+
+        public override object query(MdoQuery request, AbstractPermission permission = null)
+        {
+            return query(request.buildMessage(), permission);
         }
 
         public override object query(string request, AbstractPermission permission = null)
         {
-            string sql = "SELECT OBJECT_TYPE, DOMAIN_OBJECT_SIZE, DOMAIN_OBJECT, QUERY_STRING FROM " +
-                _src.SiteId.Id + " WHERE QUERY_STRING_HASH = '" + StringUtils.getMD5Hash(request) + "';";
+            SQLiteCommand cmd = new SQLiteCommand("SELECT ASSEMBLY_NAME, DOMAIN_OBJECT_SIZE, DOMAIN_OBJECT, QUERY_STRING FROM SITE_" + _src.SiteId.Id +
+                " WHERE QUERY_STRING_HASH = '" + StringUtils.getMD5Hash(request) + "';", _cxn);
 
-            SQLiteCommand cmd = new SQLiteCommand(sql, _cxn);
+            connect();
             SQLiteDataReader rdr = cmd.ExecuteReader();
 
             if (rdr.Read())
@@ -73,12 +77,12 @@ namespace gov.va.medora.mdo.dao.mock
                 byte[] buffer = new byte[objectSize];
                 rdr.GetBytes(2, 0, buffer, 0, objectSize);
 
-                System.Runtime.Serialization.Formatters.Binary.BinaryFormatter deserializer = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                return deserializer.Deserialize(new MemoryStream(buffer));
+                return deserializeObject(buffer);
             }
             else
             {
-                throw new exceptions.MdoException(exceptions.MdoExceptionCode.DATA_NO_RECORD_FOR_ID);
+                return "";
+                //throw new exceptions.MdoException("Record not found in mock site " + _src.SiteId.Id);
             }
         }
 
@@ -94,10 +98,10 @@ namespace gov.va.medora.mdo.dao.mock
                 throw new ArgumentException("Only supporting OracleQuery request types. Need to implement others...");
             }
 
-            string sql = "SELECT OBJECT_TYPE, DOMAIN_OBJECT_SIZE, DOMAIN_OBJECT, QUERY_STRING FROM " +
-                _src.SiteId.Id + " WHERE QUERY_STRING_HASH = '" + StringUtils.getMD5Hash(requestString) + "';";
+            SQLiteCommand cmd = new SQLiteCommand("SELECT ASSEMBLY_NAME, DOMAIN_OBJECT_SIZE, DOMAIN_OBJECT, QUERY_STRING FROM SITE_" + _src.SiteId.Id +
+                " WHERE QUERY_STRING_HASH = '" + StringUtils.getMD5Hash(requestString) + "';", _cxn);
 
-            SQLiteCommand cmd = new SQLiteCommand(sql, _cxn);
+            connect();
             SQLiteDataReader rdr = cmd.ExecuteReader();
 
             if (rdr.Read())
@@ -107,22 +111,30 @@ namespace gov.va.medora.mdo.dao.mock
                 byte[] buffer = new byte[objectSize];
                 rdr.GetBytes(2, 0, buffer, 0, objectSize);
 
-                System.Runtime.Serialization.Formatters.Binary.BinaryFormatter deserializer = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                return deserializer.Deserialize(new MemoryStream(buffer));
+                return deserializeObject(buffer);
             }
             else
             {
-                throw new exceptions.MdoException(exceptions.MdoExceptionCode.DATA_NO_RECORD_FOR_ID);
+                throw new exceptions.MdoException("Record not found in mock site " + _src.SiteId.Id);
             }
         }
 
         public override void disconnect()
         {
-            IsConnected = false;
-
-            if (IsConnected)
+            try
             {
-                _cxn.Close();
+                if (IsConnected)
+                {
+                    _cxn.Close();
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                IsConnected = false;
             }
         }
 
@@ -150,6 +162,25 @@ namespace gov.va.medora.mdo.dao.mock
             return sb.ToString();
         }
 
+
+        internal object deserializeObject(byte[] domainObject)
+        {
+            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            return bf.Deserialize(new MemoryStream(domainObject));
+        }
+
+        internal byte[] serializeObject(object domainObject)
+        {
+            MemoryStream ms = new MemoryStream();
+            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            bf.Serialize(ms, domainObject);
+            byte[] buffer = new byte[ms.Length];
+            buffer = ms.ToArray();
+            ms.Dispose();
+            return buffer;
+        }
+
+
         #region Not Implemented Members
         public override ISystemFileHandler SystemFileHandler
         {
@@ -166,11 +197,6 @@ namespace gov.va.medora.mdo.dao.mock
             throw new NotImplementedException();
         }
 
-        public override object query(MdoQuery request, AbstractPermission permission = null)
-        {
-            throw new NotImplementedException();
-        }
-
         public override string getServerTimeout()
         {
             throw new NotImplementedException();
@@ -178,5 +204,15 @@ namespace gov.va.medora.mdo.dao.mock
 
         #endregion
 
+
+        public override Dictionary<string, object> getState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void setState(Dictionary<string, object> session)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

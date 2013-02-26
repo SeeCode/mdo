@@ -26,7 +26,7 @@ namespace gov.va.medora.mdo.dao.vista
 {
     public class VistaConstants
     {
-        public static AppConfig CONFIG = new AppConfig(true, "app.conf");
+        public static AppConfig CONFIG = new AppConfig(true, "mdws.conf");
 
         public static string ADMINISTRATIVE_FEDERATED_UID = CONFIG.AllConfigs["ADMINISTRATIVE"]["FEDERATIVE_UID"];
         public static string ENCRYPTION_KEY = CONFIG.AllConfigs["ADMINISTRATIVE"]["ENCRYPTION_KEY"];
@@ -139,5 +139,6 @@ namespace gov.va.medora.mdo.dao.vista
         public const string GET_VARIABLE_VALUE = "XWB GET VARIABLE VALUE";
 
         public static string VISTA_FILEDEFS_PATH = utils.ResourceUtils.ResourcesPath + "xml/VistaFiles.xml";
+        public static string SCHEDULING_CONTEXT = "SD API";
     }
 }

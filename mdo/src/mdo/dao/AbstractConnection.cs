@@ -25,6 +25,8 @@ namespace gov.va.medora.mdo.dao
 {
     public abstract class AbstractConnection
     {
+        public DateTime LastUsed { get; set; }
+        public Dictionary<string, object> Session { get; set; }
         public Guid ConnectionId { get; set; }
         public bool IsAvailable { get; set; }
         public DateTime LastQueryTimestamp { get; set; }
@@ -142,7 +144,8 @@ namespace gov.va.medora.mdo.dao
         public abstract object query(SqlQuery request, Delegate functionToInvoke, AbstractPermission permission = null);
         public abstract string getServerTimeout();
         public abstract void disconnect();
-
+        public abstract Dictionary<string, object> getState();
+        public abstract void setState(Dictionary<string, object> session);
 
         public override int GetHashCode()
         {

@@ -1,22 +1,4 @@
-﻿#region CopyrightHeader
-//
-//  Copyright by Contributors
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//         http://www.apache.org/licenses/LICENSE-2.0.txt
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-#endregion
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -58,12 +40,11 @@ namespace gov.va.medora.mdo.dao.sqlite
                     rdr.GetBytes(2, 0, domainObject, 0, domainObjectSize);
                     string dbQueryString = rdr.GetString(3);
 
-                    System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                    return bf.Deserialize(new MemoryStream(domainObject));
+                    return deserializeObject(domainObject);
                 }
                 else
                 {
-                    throw new exceptions.MdoException("No record found for that hashcode");
+                    return null;
                 }
             }
             catch (Exception)
@@ -72,6 +53,65 @@ namespace gov.va.medora.mdo.dao.sqlite
             }
             finally
             {
+                cmd.Dispose();
+                closeConnection();
+            }
+        }
+
+        internal object deserializeObject(byte[] domainObject)
+        {
+            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            return bf.Deserialize(new MemoryStream(domainObject));
+        }
+
+        internal byte[] serializeObject(object domainObject)
+        {
+            MemoryStream ms = new MemoryStream();
+            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            bf.Serialize(ms, domainObject);
+            byte[] buffer = new byte[ms.Length];
+            buffer = ms.ToArray();
+            ms.Dispose();
+            return buffer;
+        }
+
+
+        internal void updateObject(string dataSourceId, string hashedOldQueryString, string newQueryString, string hashedNewQueryString, string queryResults)
+        {
+            string fullAssemblyName = queryResults.GetType().ToString();
+            byte[] buffer = serializeObject(queryResults);
+
+            SQLiteCommand command = new SQLiteCommand("UPDATE " + TABLE_NAME_PREFIX + dataSourceId + " SET DOMAIN_OBJECT_SIZE = " + buffer.Length +
+                ", DOMAIN_OBJECT = @domainObject, QUERY_STRING = @newQueryString, QUERY_STRING_HASH = @newHash, LAST_UPDATED = CURRENT_TIMESTAMP WHERE QUERY_STRING_HASH = '" + hashedOldQueryString + "';", _cxn);
+
+            SQLiteParameter objParam = new SQLiteParameter("@domainObject", System.Data.DbType.Binary);
+            objParam.Value = buffer;
+            command.Parameters.Add(objParam);
+
+            SQLiteParameter newQueryStringParam = new SQLiteParameter("@newQueryString", System.Data.DbType.String);
+            newQueryStringParam.Value = newQueryString;
+            command.Parameters.Add(newQueryStringParam);
+
+            SQLiteParameter hashedNewQueryStringParam = new SQLiteParameter("@newHash", System.Data.DbType.String);
+            hashedNewQueryStringParam.Value = hashedNewQueryString;
+            command.Parameters.Add(hashedNewQueryStringParam);
+
+            try
+            {
+                openConnection();
+
+                if (command.ExecuteNonQuery() != 1)
+                {
+                    throw new exceptions.MdoException("Failed to update record: " + hashedOldQueryString + " to table " + dataSourceId);
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                command.Dispose();
                 closeConnection();
             }
         }
@@ -79,15 +119,15 @@ namespace gov.va.medora.mdo.dao.sqlite
         public void updateObject(string dataSourceId, string objectHashString, object queryResults)
         {
             string fullAssemblyName = queryResults.GetType().ToString();
-            MemoryStream ms = new MemoryStream();
-            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-            bf.Serialize(ms, queryResults);
-            byte[] buffer = new byte[ms.Length];
-            buffer = ms.ToArray();
-            ms.Dispose();
+            byte[] buffer = serializeObject(queryResults);
 
-            SQLiteCommand command = new SQLiteCommand("UPDATE " + TABLE_NAME_PREFIX + dataSourceId + " SET DOMAIN_OBJECT_SIZE = " + buffer.Length +
-                ", DOMAIN_OBJECT = @domainObject WHERE QUERY_STRING_HASH = '" + objectHashString + "';", _cxn);
+            if (!dataSourceId.StartsWith(TABLE_NAME_PREFIX))
+            {
+                dataSourceId = TABLE_NAME_PREFIX + dataSourceId;
+            }
+
+            SQLiteCommand command = new SQLiteCommand("UPDATE " + dataSourceId + " SET DOMAIN_OBJECT_SIZE = " + buffer.Length +
+                ", DOMAIN_OBJECT = @domainObject, LAST_UPDATED = CURRENT_TIMESTAMP WHERE QUERY_STRING_HASH = '" + objectHashString + "';", _cxn);
 
             SQLiteParameter objParam = new SQLiteParameter("@domainObject", System.Data.DbType.Binary);
             objParam.Value = buffer;
@@ -112,19 +152,15 @@ namespace gov.va.medora.mdo.dao.sqlite
             }
             finally
             {
+                command.Dispose();
                 closeConnection();
             }
         }
 
-        public void saveObject(string dataSourceId, string queryString, object queryStringResults)
+        public void saveObject(string dataSourceId, string queryString, object results)
         {
-            string fullAssemblyName = queryStringResults.GetType().ToString();
-            MemoryStream ms = new MemoryStream();
-            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-            bf.Serialize(ms, queryStringResults);
-            byte[] buffer = new byte[ms.Length];
-            buffer = ms.ToArray();
-            ms.Dispose();
+            string fullAssemblyName = results.GetType().ToString();
+            byte[] buffer = serializeObject(results);
             string md5QueryStringHash = StringUtils.getMD5Hash(queryString);
 
             if (!dataSourceId.StartsWith(TABLE_NAME_PREFIX))
@@ -146,12 +182,52 @@ namespace gov.va.medora.mdo.dao.sqlite
             {
                 openConnection();
 
+                if (!hasTable(dataSourceId))
+                {
+                    createTableForSite(dataSourceId);
+                }
+
                 if (command.ExecuteNonQuery() != 1)
                 {
                     throw new exceptions.MdoException("Failed to save query: " + queryString + " to table " + dataSourceId);
                 }
             }
-            catch (Exception) 
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                command.Dispose();
+                closeConnection();
+            }
+        }
+
+        public void saveOrUpdateObject(string dataSourceId, string queryString, object results)
+        {
+            try
+            {
+                saveObject(dataSourceId, queryString, results);
+            }
+            catch (System.Data.SQLite.SQLiteException exc)
+            {
+                if (exc.ErrorCode == SQLiteErrorCode.Constraint)
+                {
+                    try
+                    {
+                        updateObject(dataSourceId, StringUtils.getMD5Hash(queryString), results);
+                    }
+                    catch (Exception updateExc)
+                    {
+                        throw new gov.va.medora.mdo.exceptions.MdoException("Unable to saveOrUpdate to SQLite", updateExc);
+                    }
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            catch (Exception)
             {
                 throw;
             }
@@ -177,8 +253,10 @@ namespace gov.va.medora.mdo.dao.sqlite
         }
 
         // needs a bit of work... very ugly but it seems to serve it's purpose for running tests froim mdo-x and mdo-test
-        string getResourcesPath()
+        internal string getResourcesPath()
         {
+            // @"Data Source=C:\workspace\MDWS\branches\vhaannmewtoj\mdo\mdo-test\resources\data\MockMdoData";
+
             string executingAssemblyName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
             string executingAssemblyPath = System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase;
             UriBuilder uri = new UriBuilder(executingAssemblyPath);
@@ -200,9 +278,22 @@ namespace gov.va.medora.mdo.dao.sqlite
             string replacementString = "\\mdo-test\\resources\\data\\MockMdoData.sqlite";
             string adjustedPath = "";
 
-            adjustedPath = executingAssemblyPath.Replace("\\mdo\\bin\\", replacementString);
-            adjustedPath = executingAssemblyPath.Replace("\\mdo-test\\bin\\", replacementString);
-            adjustedPath = executingAssemblyPath.Replace("\\mdo-x\\bin\\", replacementString);
+            if (executingAssemblyPath.Contains(@"\mdo\bin\"))
+            {
+                adjustedPath = executingAssemblyPath.Replace(@"\mdo\bin\", replacementString);
+            }
+            else if (executingAssemblyPath.Contains(@"\mdo-test\bin\"))
+            {
+                adjustedPath = executingAssemblyPath.Replace(@"\mdo-test\bin\", replacementString);
+            }
+            else if (executingAssemblyPath.Contains(@"\mdo-x\bin\"))
+            {
+                adjustedPath = executingAssemblyPath.Replace(@"\mdo-x\bin\", replacementString);
+            }
+            else if (executingAssemblyPath.Contains(@"\mdws-test\bin\"))
+            {
+                adjustedPath = executingAssemblyPath.Replace(@"\mdws\mdws-test\bin\", "\\mdo" + replacementString);
+            }
 
             if (!adjustedPath.Contains(replacementString))
             {
@@ -212,9 +303,14 @@ namespace gov.va.medora.mdo.dao.sqlite
             return "Data Source=" + adjustedPath;
         }
 
-        public void createTableForSite(string siteId)
+        internal void createTableForSite(string dataSourceId)
         {
-            string sqlCreateTable = "CREATE TABLE \"" + TABLE_NAME_PREFIX + siteId + "\" (" +
+            if (!dataSourceId.StartsWith(TABLE_NAME_PREFIX))
+            {
+                dataSourceId = TABLE_NAME_PREFIX + dataSourceId;
+            }
+
+            string sqlCreateTable = "CREATE TABLE \"" + dataSourceId + "\" (" +
                 "\"ID\" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
                 "\"ASSEMBLY_NAME\" TEXT NOT NULL, " +
                 "\"DOMAIN_OBJECT_SIZE\" INTEGER NOT NULL, " +
@@ -224,7 +320,7 @@ namespace gov.va.medora.mdo.dao.sqlite
                 "\"LAST_UPDATED\" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);";
 
             // index name must share unique site ID name because sqlite doesn't like duplicate index names across tables
-            string sqlCreateIndex = "CREATE UNIQUE INDEX IDX_QUERY_STRING_HASH_" + siteId + " ON " + TABLE_NAME_PREFIX + siteId + " (QUERY_STRING_HASH);";
+            string sqlCreateIndex = "CREATE UNIQUE INDEX IDX_QUERY_STRING_HASH_" + dataSourceId + " ON " + dataSourceId + " (QUERY_STRING_HASH);";
 
             SQLiteCommand createTableCmd = new SQLiteCommand(sqlCreateTable, _cxn);
             SQLiteCommand createIndexCmd = new SQLiteCommand(sqlCreateIndex, _cxn);
@@ -241,7 +337,48 @@ namespace gov.va.medora.mdo.dao.sqlite
             }
             finally
             {
+                createTableCmd.Dispose();
+                createIndexCmd.Dispose();
                 closeConnection();
+            }
+        }
+
+        internal bool hasTable(string dataSourceId)
+        {
+            if (!dataSourceId.StartsWith(TABLE_NAME_PREFIX))
+            {
+                dataSourceId = TABLE_NAME_PREFIX + dataSourceId;
+            }
+            string sql = "SELECT COUNT(*) FROM sqlite_master WHERE NAME='" + dataSourceId + "';";
+            SQLiteCommand cmd = new SQLiteCommand(sql, _cxn);
+
+            bool wasOpen = _cxnIsOpen;
+            try
+            {
+                openConnection();
+
+                SQLiteDataReader rdr = cmd.ExecuteReader();
+
+                if (rdr.Read())
+                {
+                    return rdr.GetInt32(0) == 1;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                cmd.Dispose();
+                if (!wasOpen)
+                {
+                    closeConnection();
+                }
             }
         }
     }

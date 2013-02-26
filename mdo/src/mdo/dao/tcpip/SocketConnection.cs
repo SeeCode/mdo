@@ -113,5 +113,15 @@ namespace gov.va.medora.mdo.dao.tcpip
             }
             catch (Exception) { /* just catch */ }
         }
+
+        public override Dictionary<string, object> getState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void setState(Dictionary<string, object> session)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

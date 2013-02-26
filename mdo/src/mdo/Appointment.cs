@@ -37,6 +37,22 @@ namespace gov.va.medora.mdo
         string purpose;
         string type;
         string currentStatus;
+        AppointmentType _appointmentType;
+        string _length;
+
+        public Visit Visit { get; set; }
+
+        public string Length
+        {
+            get { return _length; }
+            set { _length = value; }
+        }
+
+        public AppointmentType AppointmentType
+        {
+            get { return _appointmentType; }
+            set { _appointmentType = value; }
+        }
 
         public Appointment() { }
 
@@ -117,5 +133,7 @@ namespace gov.va.medora.mdo
             get { return currentStatus; }
             set { currentStatus = value; }
         }
+
+        public string PurposeSubcategory { get; set; }
     }
 }

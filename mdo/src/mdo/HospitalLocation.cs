@@ -53,8 +53,43 @@ namespace gov.va.medora.mdo
         string status;
         string phone;
         string appointmentTimestamp;
+        bool _askForCheckIn; // file 44 field 24
+        string _appointmentLength; // file 44 field 1912
+        string _clinicDisplayStartTime; // file 44, field 1914
+        string _displayIncrements; // file 44, field 1917
+        IList<TimeSlot> _availability;
 
         const string DAO_NAME = "ILocationDao";
+
+        public IList<TimeSlot> Availability
+        {
+            get { return _availability; }
+            set { _availability = value; }
+        }
+
+        public string ClinicDisplayStartTime
+        {
+            get { return _clinicDisplayStartTime; }
+            set { _clinicDisplayStartTime = value; }
+        }
+
+        public string DisplayIncrements
+        {
+            get { return _displayIncrements; }
+            set { _displayIncrements = value; }
+        }
+
+        public string AppointmentLength
+        {
+            get { return _appointmentLength; }
+            set { _appointmentLength = value; }
+        }
+
+        public bool AskForCheckIn
+        {
+            get { return _askForCheckIn; }
+            set { _askForCheckIn = value; }
+        }
 
         public HospitalLocation(string id, string name) 
         {
