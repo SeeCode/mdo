@@ -1,21 +1,3 @@
-#region CopyrightHeader
-//
-//  Copyright by Contributors
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//         http://www.apache.org/licenses/LICENSE-2.0.txt
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-#endregion
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -26,6 +8,7 @@ using gov.va.medora.utils.mock;
 using gov.va.medora.mdo.dao.vista;
 using System.IO;
 using gov.va.medora.mdo.exceptions;
+using gov.va.medora.mdo.dao.mock;
 
 namespace gov.va.medora.mdo.dao
 {
@@ -39,14 +22,7 @@ namespace gov.va.medora.mdo.dao
         private bool verifyRpc = true;
         private bool updateRpc = false;
 
-        public String OverrideMockFile
-        {
-            set 
-            { 
-                string fileId = value + this.DataSource.SiteId.Id;
-                setXmlSource(fileId, this.updateRpc);
-            }
-        }
+        AbstractConnection _sqliteCxn;
 
         public bool VerifyRpc 
         {
@@ -55,21 +31,11 @@ namespace gov.va.medora.mdo.dao
             set { verifyRpc = value; } 
         }
 
-        MockXmlSource xmlSource;
         ISystemFileHandler sysFileHandler;
 
-        public void setXmlSource(string siteId, bool updateRpc) 
-        {
-            if (null != xmlSource)
-            {
-                xmlSource = null;
-            }
-            xmlSource = new MockXmlSource(siteId, updateRpc);
-        }
-        // Need this constructor to compile, but no tests use it.
         public MockConnection(DataSource dataSource) : base(dataSource) 
         {
-            throw new ArgumentException("MockConnection does not use DataSource");
+            _sqliteCxn = new XSqliteConnection(dataSource);
         }
 
         // This constructor is needed for API level tests.
@@ -79,20 +45,11 @@ namespace gov.va.medora.mdo.dao
             this.DataSource.SiteId = new SiteId(siteId, "Mock");
             this.DataSource.Protocol = protocol;
 
-            //DP 3/24/2011
-            //I commented out the line below, the pid should not be set to 
-            //"0" as the default, as all of the other subclasses of 
-            //AbstractCollection do not set it.  This was causing conflicts 
-            //b/w the MockConnection.XML file and the DaoX tests.
 
-            //I will fix the affected tests (14 now fail as the exception 
-            //message has changed).
-
-            //this.Pid = "0";
-
-            setXmlSource(siteId, updateRpc);
-
-            this.Account = new VistaAccount(this);
+            _sqliteCxn = new XSqliteConnection(this.DataSource);
+            
+            this.Account = new MockAccount(this);
+            //this.Account.IsAuthenticated = true;
             this.updateRpc = updateRpc;
 
             AbstractCredentials credentials = new VistaCredentials();
@@ -101,10 +58,8 @@ namespace gov.va.medora.mdo.dao
             AbstractPermission permission = new MenuOption(VistaConstants.MDWS_CONTEXT);
             permission.IsPrimary = true;
             this.Account.Permissions.Add(permission.Name, permission);
-            //permission = new MenuOption(VistaConstants.DDR_CONTEXT);
-            //this.Account.Permissions.Add(permission.Name, permission);
-            sysFileHandler = new VistaSystemFileHandler(this);
         }
+
         public override ISystemFileHandler SystemFileHandler
         {
             get
@@ -116,16 +71,11 @@ namespace gov.va.medora.mdo.dao
                 return sysFileHandler;
             }
         }
+
         public override void connect()
         {
             IsConnected = true;
         }
-
-        //public override object authorizedConnect(AbstractCredentials credentials, AbstractPermission permission)
-        //{
-        //    IsConnected = true;
-        //    return null;
-        //}
 
         public override object authorizedConnect(AbstractCredentials credentials, AbstractPermission permission, DataSource validationDataSource)
         {
@@ -151,14 +101,67 @@ namespace gov.va.medora.mdo.dao
                 throw new NotConnectedException();
             }
 
-            xmlSource.VerifyRpc = this.VerifyRpc;
-            String reply = xmlSource.query(query);
+            string reply = (string)_sqliteCxn.query(query, permission);
+
             if (reply.Contains("M  ERROR"))
             {
                 throw new MdoException(MdoExceptionCode.VISTA_FAULT, reply);
             }
             return reply;
         }
+
+        //internal void updateSqlite(MdoQuery oldRequest, string newRequest, string reply)
+        //{
+        //    sqlite.SqliteDao sqliteDao = new sqlite.SqliteDao();
+        //    string hashedOldQueryString = StringUtils.getMD5Hash(oldRequest.buildMessage());
+        //    string hashedNewQueryString = StringUtils.getMD5Hash(newRequest);
+
+        //    try
+        //    {
+        //        sqliteDao.getObject(this.xmlSource.siteId, hashedOldQueryString); // should throw exception on failure
+        //        sqliteDao.updateObject(this.xmlSource.siteId, hashedOldQueryString, newRequest, hashedNewQueryString, reply);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        // swallow
+        //    }
+        //}
+        
+        //internal void saveToSqlite(MdoQuery request, string reply)
+        //{
+        //    sqlite.SqliteDao sqliteDao = new sqlite.SqliteDao();
+        //    string queryString = request.buildMessage();
+        //    string hashedQueryString = StringUtils.getMD5Hash(queryString);
+
+        //    try
+        //    {
+        //        object savedObj = sqliteDao.getObject(this.xmlSource.siteId, hashedQueryString);
+                
+        //        if (savedObj as string == reply)
+        //        {
+        //            return;
+        //        }
+        //        else
+        //        {
+        //            sqliteDao.updateObject(this.xmlSource.siteId, hashedQueryString, reply);
+        //        }
+        //    }
+        //    catch (Exception)
+        //    {
+        //        try
+        //        {
+        //            if (!sqliteDao.hasTable(this.xmlSource.siteId))
+        //            {
+        //                sqliteDao.createTableForSite(this.xmlSource.siteId);
+        //            }
+        //            sqliteDao.saveObject(this.xmlSource.siteId, queryString, reply);
+        //        }
+        //        catch (Exception exc)
+        //        {
+        //            throw new Exception("There was a problem saving the XML data to Sqlite: " + exc.Message);
+        //        }
+        //    }
+        //}
 
         public override object query(string request, AbstractPermission permission = null)
         {
@@ -184,5 +187,20 @@ namespace gov.va.medora.mdo.dao
         {
             throw new NotImplementedException();
         }
+
+        public override Dictionary<string, object> getState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void setState(Dictionary<string, object> session)
+        {
+            throw new NotImplementedException();
+        }
+
+        //public override bool isAlive()
+        //{
+        //    throw new NotImplementedException();
+        //}
     }
 }

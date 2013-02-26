@@ -78,6 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\BaseTest.cs" />
     <Compile Include="src\mdo\dao\ConfigFileDaoTest.cs" />
     <Compile Include="src\mdo\dao\hl7\rxRefill\RxProfileDecoderTest.cs" />
     <Compile Include="src\mdo\dao\hl7\rxRefill\RxRefillDecoderTest.cs" />
@@ -89,6 +90,7 @@
     <Compile Include="src\mdo\dao\sql\cdw\CdwPharmacyDaoTest.cs" />
     <Compile Include="src\mdo\dao\vista\MockApp.cs" />
     <Compile Include="src\mdo\dao\vista\VistaDateTimeIteratorTest.cs" />
+    <Compile Include="src\mdo\dao\vista\VistaSchedulingDaoTest.cs" />
     <Compile Include="src\mdo\dao\vista\VistaSetups.cs" />
     <Compile Include="src\mdo\dao\vista\VistaSocSecNumTest.cs" />
     <Compile Include="src\mdo\dao\vista\VistaUtilsTest.cs" />
@@ -116,7 +118,7 @@
     <None Include="app.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="resources\conf\app.conf" />
+    <None Include="resources\conf\mdws.conf" />
     <None Include="resources\lib\nunit\clr.bat" />
     <None Include="resources\lib\nunit\mock-assembly.dll.config" />
     <None Include="resources\lib\nunit\nunit-console.exe.config" />

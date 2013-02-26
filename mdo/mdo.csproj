@@ -99,6 +99,7 @@
     <Compile Include="src\mdo\api\ToolsApi.cs" />
     <Compile Include="src\mdo\api\UserApi.cs" />
     <Compile Include="src\mdo\Appointment.cs" />
+    <Compile Include="src\mdo\AppointmentType.cs" />
     <Compile Include="src\mdo\Author.cs" />
     <Compile Include="src\mdo\BasicMdo.cs" />
     <Compile Include="src\mdo\ChemHemReport.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="src\mdo\dao\hl7\rxRefill\RxProfileDecoder.cs" />
     <Compile Include="src\mdo\dao\hl7\HL7Connection.cs" />
     <Compile Include="src\mdo\dao\hl7\rxRefill\RxRefillDecoder.cs" />
+    <Compile Include="src\mdo\dao\ISchedulingDao.cs" />
     <Compile Include="src\mdo\dao\mock\MockDataReader.cs" />
     <Compile Include="src\mdo\dao\mock\XCdwConnection.cs" />
     <Compile Include="src\mdo\dao\mock\XSqliteConnection.cs" />
@@ -283,6 +285,7 @@
     <Compile Include="src\mdo\dao\vista\VistaQuery.cs" />
     <Compile Include="src\mdo\dao\vista\VistaRadiologyDao.cs" />
     <Compile Include="src\mdo\dao\vista\VistaRemindersDao.cs" />
+    <Compile Include="src\mdo\dao\vista\VistaSchedulingDao.cs" />
     <Compile Include="src\mdo\dao\vista\VistaSocSecNum.cs" />
     <Compile Include="src\mdo\dao\vista\VistaSystemFileHandler.cs" />
     <Compile Include="src\mdo\dao\vista\VistaTimestamp.cs" />
@@ -358,6 +361,7 @@
     <Compile Include="src\mdo\ElectronMicroscopyReport.cs" />
     <Compile Include="src\mdo\EmailAddress.cs" />
     <Compile Include="src\mdo\Encounter.cs" />
+    <Compile Include="src\mdo\EwlItem.cs" />
     <Compile Include="src\mdo\exceptions\ConnectionException.cs" />
     <Compile Include="src\mdo\exceptions\DataException.cs" />
     <Compile Include="src\mdo\exceptions\MdoException.cs" />
@@ -446,6 +450,7 @@
     <Compile Include="src\mdo\Symptom.cs" />
     <Compile Include="src\mdo\Team.cs" />
     <Compile Include="src\mdo\TextReport.cs" />
+    <Compile Include="src\mdo\TimeSlot.cs" />
     <Compile Include="src\mdo\TreatingSpecialty.cs" />
     <Compile Include="src\mdo\User.cs" />
     <Compile Include="src\mdo\UserOption.cs" />

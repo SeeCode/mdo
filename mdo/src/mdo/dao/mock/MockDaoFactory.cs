@@ -32,7 +32,7 @@ namespace gov.va.medora.mdo.dao
                 throw new ArgumentNullException("MockConnection must have a data source");
             }
             MockConnection cxn = new MockConnection(dataSource.SiteId.Id, dataSource.Protocol);
-            cxn.OverrideMockFile = "MDWS";
+            //cxn.OverrideMockFile = "MDWS";
             cxn.VerifyRpc = false;
             cxn.ConnectStrategy = new MockConnectStrategy(cxn);
             return cxn;

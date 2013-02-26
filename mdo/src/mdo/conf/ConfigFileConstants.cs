@@ -22,7 +22,7 @@ namespace gov.va.medora.mdo.conf
 {
     public class ConfigFileConstants
     {
-        public const string CONFIG_FILE_NAME = "app.conf"; // DO NOT hardcode this anywhere else!!! This will be the one location
+        public const string CONFIG_FILE_NAME = "mdws.conf"; // DO NOT hardcode this anywhere else!!! This will be the one location
 
         // don't like having this MDWS constant down in MDO - consider refactoring
         public static string PRIMARY_CONFIG_SECTION = "MDWS";

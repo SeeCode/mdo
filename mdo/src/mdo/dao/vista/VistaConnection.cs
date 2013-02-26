@@ -290,5 +290,95 @@ namespace gov.va.medora.mdo.dao.vista
         {
             throw new NotImplementedException();
         }
+
+        #region Symbol Table
+        /// <summary>
+        /// Set the connections session variable to the symbol table
+        /// </summary>
+        public void setSymbolTable()
+        {
+            setState(this.Session);
+        }
+
+        public override void setState(Dictionary<string, object> sessionTable)
+        {
+            MdoQuery request = buildSetSymbolTableRequest(sessionTable);
+            string response = (string)query(request.buildMessage());
+            if (!String.Equals(response, "1"))
+            {
+                throw new MdoException("Unable to deserialize symbol table! Vista code: {0}", response);
+            }
+        }
+
+        internal MdoQuery buildSetSymbolTableRequest(Dictionary<string, object> sessionTable)
+        {
+            VistaQuery request = new VistaQuery("XWB DESERIALIZE");
+            DictionaryHashList dhl = new DictionaryHashList();
+            string[] allKeys = new string[sessionTable.Count];
+            sessionTable.Keys.CopyTo(allKeys, 0);
+
+            for (int i = 0; i < sessionTable.Count; i++)
+            {
+                dhl.Add((i + 1).ToString(), (object)String.Concat(allKeys[i], '\x1e', sessionTable[allKeys[i]]));
+            }
+
+            request.addParameter(request.LIST, dhl);
+            return request;
+        }
+
+        public override Dictionary<string, object> getState()
+        {
+            return getSerializedSymbolTable();
+        }
+
+        internal Dictionary<string, object> getSerializedSymbolTable()
+        {
+            MdoQuery request = buildGetSerializedSymbolTableRequest();
+            string response = (string)query(request);
+            return toSerializedSymbolTable(response);
+        }
+
+        internal MdoQuery buildGetSerializedSymbolTableRequest()
+        {
+            MdoQuery request = new VistaQuery("XWB SERIALIZE");
+            return request;
+        }
+
+        internal Dictionary<string, object> toSerializedSymbolTable(string response)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            string[] lines = StringUtils.split(response, '\x1f');
+            foreach (string line in lines)
+            {
+                if (String.IsNullOrEmpty(line))
+                {
+                    continue;
+                }
+                string[] pieces = StringUtils.split(line, '\x1e');
+                string key = pieces[0];
+                object value = null;
+
+                if (String.IsNullOrEmpty(pieces[1]) || pieces[1].StartsWith("\""))
+                {
+                    value = pieces[1] as string;
+                }
+                else
+                {
+                    value = pieces[1];
+                }
+
+                result.Add(key, value);
+            }
+            return result;
+        }
+        #endregion
+
+        public void heartbeat()
+        {
+            VistaQuery vq = new VistaQuery("XWB IM HERE");
+            this.query(vq);
+        }
+
     }
 }

@@ -152,5 +152,15 @@ namespace gov.va.medora.mdo.dao.sql.cdw
         {
             throw new NotImplementedException();
         }
+
+        public override Dictionary<string, object> getState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void setState(Dictionary<string, object> session)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

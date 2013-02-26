@@ -56,8 +56,15 @@ namespace gov.va.medora.mdo
         bool requiresCosigner;
         User usualCosigner;
         AbstractPermission primaryPermission;
+        string _domain;
 
         public User() { }
+
+        public string Domain
+        {
+            get { return _domain; }
+            set { _domain = value; }
+        }
 
         public string Uid
         {

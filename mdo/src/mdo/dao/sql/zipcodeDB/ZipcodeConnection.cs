@@ -92,5 +92,15 @@ namespace gov.va.medora.mdo.dao.sql.zipcodeDB
         {
             throw new NotImplementedException();
         }
+
+        public override System.Collections.Generic.Dictionary<string, object> getState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void setState(System.Collections.Generic.Dictionary<string, object> session)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
