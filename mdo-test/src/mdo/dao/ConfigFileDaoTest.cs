@@ -40,7 +40,7 @@ namespace gov.va.medora.mdo.dao.file
         public void testReadConfigValidFile()
         {
             string projectResourcePath = gov.va.medora.utils.ResourceUtils.ResourcesPath;
-            string confFilePath = projectResourcePath + "conf\\app.conf";
+            string confFilePath = projectResourcePath + "conf\\mdws.conf";
 
             ConfigFileDao dao = new ConfigFileDao(confFilePath);
             Dictionary<string, Dictionary<string, string>> result = dao.getAllValues();
