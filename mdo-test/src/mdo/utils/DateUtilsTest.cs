@@ -32,8 +32,8 @@ namespace gov.va.medora.utils
     [TestFixture]
     public class DateUtilsTest
     {
-        private static readonly ILog LOG
-            = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog LOG
+        //    = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         [Test]
         public void testIsLeapYear()
