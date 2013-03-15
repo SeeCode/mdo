@@ -111,5 +111,10 @@ namespace gov.va.medora.mdo.dao.vista.fhie
             return new VistaRadiologyDao(cxn);
         }
 
+
+        public override ISchedulingDao getSchedulingDao(AbstractConnection cxn)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

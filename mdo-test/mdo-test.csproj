@@ -95,6 +95,7 @@
     <Compile Include="src\mdo\dao\vista\VistaSocSecNumTest.cs" />
     <Compile Include="src\mdo\dao\vista\VistaUtilsTest.cs" />
     <Compile Include="src\mdo\domain\ccr\CCRHelperTest.cs" />
+    <Compile Include="src\mdo\domain\pool\ConnectionPoolTest.cs" />
     <Compile Include="src\mdo\MockDataReader.cs" />
     <Compile Include="src\mdo\DemographicSetTest.cs" />
     <Compile Include="src\mdo\SocSecNumTest.cs" />

@@ -20,10 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using gov.va.medora.mdo.src.mdo;
+using gov.va.medora.mdo.domain.pool;
 
 namespace gov.va.medora.mdo.dao
 {
-    public abstract class AbstractConnection
+    public abstract class AbstractConnection : AbstractTimedResource
     {
         public DateTime LastUsed { get; set; }
         public Dictionary<string, object> Session { get; set; }
@@ -103,7 +104,7 @@ namespace gov.va.medora.mdo.dao
             set { _welcomeMsg = value; }
         }
 
-        public bool IsConnected
+        public virtual bool IsConnected
         {
             get { return _connected; }
             set { _connected = value; }
@@ -156,5 +157,13 @@ namespace gov.va.medora.mdo.dao
         {
             return ConnectionId.ToString();
         }
+
+
+        public override void Dispose()
+        {
+            this.IsConnected = false;
+            this.disconnect();
+        }
+
     }
 }

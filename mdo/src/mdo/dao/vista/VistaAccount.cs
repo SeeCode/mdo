@@ -29,7 +29,7 @@ namespace gov.va.medora.mdo.dao.vista
 {
     public class VistaAccount : AbstractAccount
     {
-        static Dictionary<string, string> administrativeDfns = new conf.AppConfig(true, "app.conf").AllConfigs[conf.ConfigFileConstants.SERVICE_ACCOUNT_CONFIG_SECTION];
+        static Dictionary<string, string> administrativeDfns = new conf.AppConfig(true, conf.ConfigFileConstants.CONFIG_FILE_NAME).AllConfigs[conf.ConfigFileConstants.SERVICE_ACCOUNT_CONFIG_SECTION];
 
         public VistaAccount(AbstractConnection cxn) : base(cxn) { }
 

@@ -123,5 +123,10 @@ namespace gov.va.medora.mdo.dao
             return new VistaRadiologyDao(cxn);
         }
 
+
+        public override ISchedulingDao getSchedulingDao(AbstractConnection cxn)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

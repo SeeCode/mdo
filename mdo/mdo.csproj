@@ -72,6 +72,7 @@
     </Reference>
     <Reference Include="Oracle.DataAccess, Version=4.112.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86" />
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite, Version=1.0.80.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86" />
     <Reference Include="System.Web.Services" />
@@ -237,6 +238,7 @@
     <Compile Include="src\mdo\dao\ICytologyReportDao.cs" />
     <Compile Include="src\mdo\dao\vista\VistaChemHemDao.cs" />
     <Compile Include="src\mdo\dao\vista\VistaClaimsDao.cs" />
+    <Compile Include="src\mdo\dao\vista\VistaConnectionPoolDaoFactory.cs" />
     <Compile Include="src\mdo\dao\vista\VistaCredentials.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -282,6 +284,7 @@
     <Compile Include="src\mdo\dao\vista\VistaOrdersDao.cs" />
     <Compile Include="src\mdo\dao\vista\VistaPatientDao.cs" />
     <Compile Include="src\mdo\dao\vista\VistaPharmacyDao.cs" />
+    <Compile Include="src\mdo\dao\vista\VistaPoolConnection.cs" />
     <Compile Include="src\mdo\dao\vista\VistaQuery.cs" />
     <Compile Include="src\mdo\dao\vista\VistaRadiologyDao.cs" />
     <Compile Include="src\mdo\dao\vista\VistaRemindersDao.cs" />
@@ -302,6 +305,21 @@
     <Compile Include="src\mdo\domain\ccd\ccd.cs" />
     <Compile Include="src\mdo\domain\ccd\ccr.cs" />
     <Compile Include="src\mdo\domain\ccd\CCRHelper.cs" />
+    <Compile Include="src\mdo\domain\pool\AbstractPoolSource.cs" />
+    <Compile Include="src\mdo\domain\pool\AbstractPoolSourceFactory.cs" />
+    <Compile Include="src\mdo\domain\pool\AbstractResource.cs" />
+    <Compile Include="src\mdo\domain\pool\AbstractResourcePool.cs" />
+    <Compile Include="src\mdo\domain\pool\AbstractResourcePoolFactory.cs" />
+    <Compile Include="src\mdo\domain\pool\AbstractResourceState.cs" />
+    <Compile Include="src\mdo\domain\pool\AbstractResourceThread.cs" />
+    <Compile Include="src\mdo\domain\pool\AbstractTimedResource.cs" />
+    <Compile Include="src\mdo\domain\pool\connection\ConnectionPool.cs" />
+    <Compile Include="src\mdo\domain\pool\connection\ConnectionPoolFactory.cs" />
+    <Compile Include="src\mdo\domain\pool\connection\ConnectionPools.cs" />
+    <Compile Include="src\mdo\domain\pool\connection\ConnectionPoolSource.cs" />
+    <Compile Include="src\mdo\domain\pool\connection\ConnectionPoolSourceFactory.cs" />
+    <Compile Include="src\mdo\domain\pool\connection\ConnectionPoolsSource.cs" />
+    <Compile Include="src\mdo\domain\pool\connection\ConnectionThread.cs" />
     <Compile Include="src\mdo\domain\sm\AbstractPage.cs" />
     <Compile Include="src\mdo\domain\sm\Addressee.cs" />
     <Compile Include="src\mdo\domain\sm\Addressees.cs" />

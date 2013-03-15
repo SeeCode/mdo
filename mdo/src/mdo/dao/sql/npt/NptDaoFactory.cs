@@ -108,5 +108,10 @@ namespace gov.va.medora.mdo.dao.sql.npt
         {
             return null;
         }
+
+        public override ISchedulingDao getSchedulingDao(AbstractConnection cxn)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -26,6 +26,7 @@ namespace gov.va.medora.mdo.dao
 {
     public abstract class AbstractDaoFactory
     {
+        public const int PVISTA = 0; // pooled vista
         public const int VISTA = 1;
         public const int FHIE = 2;
         public const int HL7 = 3;
@@ -36,6 +37,9 @@ namespace gov.va.medora.mdo.dao
         public const int MHV = 202;
         public const int VADIR = 203;
         public const int CDW = 204;
+        public const int SM = 205;
+        public const int RDW = 206;
+        public const int LDAP = 300;
 
         public const int XVISTA = 998;
         public const int MOCK = 999;
@@ -58,6 +62,7 @@ namespace gov.va.medora.mdo.dao
         public abstract ILocationDao getLocationDao(AbstractConnection cxn);
         public abstract IOrdersDao getOrdersDao(AbstractConnection cxn);
         public abstract IRadiologyDao getRadiologyDao(AbstractConnection cxn);
+        public abstract ISchedulingDao getSchedulingDao(AbstractConnection cxn);
 
         public Object getDaoByName(string daoName, AbstractConnection cxn)
         {
@@ -65,6 +70,10 @@ namespace gov.va.medora.mdo.dao
     	    {
     		    return getConnection(cxn.DataSource);
     	    }
+            if (daoName == "ISchedulingDao")
+            {
+                return getSchedulingDao(cxn);
+            }
             if (daoName == "IToolsDao")
             {
                 return getToolsDao(cxn);
@@ -134,6 +143,10 @@ namespace gov.va.medora.mdo.dao
 
         public static int getConstant (string value)
         {
+            if (value == "PVISTA")
+            {
+                return PVISTA;
+            }
             if (value == "VISTA") 
             {
         	    return VISTA;
@@ -182,6 +195,18 @@ namespace gov.va.medora.mdo.dao
             {
                 return MOCK;
             }
+            if (String.Equals(value, "SM", StringComparison.CurrentCultureIgnoreCase))
+            {
+                return SM;
+            }
+            if (String.Equals(value, "LDAP", StringComparison.CurrentCultureIgnoreCase))
+            {
+                return LDAP;
+            }
+            if (String.Equals(value, "RDW", StringComparison.CurrentCultureIgnoreCase))
+            {
+                return RDW;
+            }
             return 0;
         }
 
@@ -189,6 +214,8 @@ namespace gov.va.medora.mdo.dao
         {
             switch (protocol)
 		    {
+                case PVISTA:
+                    return new VistaConnectionPoolDaoFactory();
                 case VISTA:
                     return new VistaDaoFactory();
                 case FHIE:

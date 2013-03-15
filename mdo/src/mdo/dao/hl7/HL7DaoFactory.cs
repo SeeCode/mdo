@@ -113,5 +113,10 @@ namespace gov.va.medora.mdo.dao.hl7
             throw new NotImplementedException();
         }
         #endregion
+
+        public override ISchedulingDao getSchedulingDao(AbstractConnection cxn)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

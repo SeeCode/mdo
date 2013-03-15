@@ -108,5 +108,10 @@ namespace gov.va.medora.mdo.dao.oracle.vadir
         {
             return null;
         }
+
+        public override ISchedulingDao getSchedulingDao(AbstractConnection cxn)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -113,5 +113,10 @@ namespace gov.va.medora.mdo.dao.sql.cdw
         {
             throw new NotImplementedException();
         }
+
+        public override ISchedulingDao getSchedulingDao(AbstractConnection cxn)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
