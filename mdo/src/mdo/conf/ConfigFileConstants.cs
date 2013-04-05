@@ -1,30 +1,12 @@
-﻿#region CopyrightHeader
-//
-//  Copyright by Contributors
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//         http://www.apache.org/licenses/LICENSE-2.0.txt
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-#endregion
+﻿using System;
 
-using System;
-
+// This is just a crazy comment. *CRAZY*
 namespace gov.va.medora.mdo.conf
 {
     public class ConfigFileConstants
     {
-        public const string CONFIG_FILE_NAME = "mdws.conf"; // DO NOT hardcode this anywhere else!!! This will be the one location
+        public static string CONFIG_FILE_NAME = "mdws.conf";
 
-        // don't like having this MDWS constant down in MDO - consider refactoring
         public static string PRIMARY_CONFIG_SECTION = "MAIN";
         public static string BSE_CONFIG_SECTION = "BSE";
         public static string SQL_CONFIG_SECTION = "SQL";
@@ -36,8 +18,10 @@ namespace gov.va.medora.mdo.conf
         public static string CDW_CONFIG_SECTION = "CDW SQL";
         public static string MOS_CONFIG_SECTION = "MOS SQL";
         public static string APP_PROXY_CONFIG_SECTION = "APPLICATION PROXY";
+        public static string SM_CONFIG_SECTION = "SM";
 
         public static string SERVICE_ACCOUNT_CONFIG_SECTION = "Administrative IDs";
+
         /// <summary>
         /// The SQL connection string
         /// </summary>
@@ -62,5 +46,52 @@ namespace gov.va.medora.mdo.conf
         /// SQL port
         /// </summary>
         public static string SQL_PORT = "SqlPort";
+        /// <summary>
+        /// The BSE data encryption key
+        /// </summary>
+        public static string BSE_SQL_ENCRYPTION_KEY = "EncryptionKey";
+        /// <summary>
+        /// Valid NHIN data types
+        /// </summary>
+        public static string NHIN_TYPES = "NhinTypes";
+        /// <summary>
+        /// The BSE security phrase for MDWS/MDO
+        /// </summary>
+        public static string SECURITY_PHRASE = "SecurityPhrase";
+        /// <summary>
+        /// The hashed BSE security phrase for MDWS/MDO
+        /// </summary>
+        public static string HASHED_SECURITY_PHRASE = "HashedSecurityPhrase";
+        /// <summary>
+        /// The service account ID
+        /// </summary>
+        public static string ADMIN_FEDERATED_UID = "AdminUserID";
+
+        public static string RUNAS_USER_DOMAIN = "RunasUserDomain";
+
+        public static string RUNAS_USER_NAME = "RunasUserName";
+
+        public static string RUNAS_USER_PASSWORD = "RunasUserPassword";
+
+        public static string LDAP_CONFIG_SECTION = "LDAP";
+
+        #region SM EMAIL
+        public static string SM_EMAIL_FROM = "EmailFrom";
+
+        public static string SM_EMAIL_SUBJECT = "EmailSubject";
+
+        public static string SM_EMAIL_LINK = "EmailLink";
+
+        public static string SM_EMAIL_BODY = "EmailBody";
+
+        public static string SMTP_DOMAIN = "SmtpHostOrIP";
+
+        public static string SMTP_PORT = "SmtpPort";
+
+        public static string SM_EMAIL_DELIVERY_METHOD = "SmtpDeliveryMethod";
+
+        public static string SM_CONNECTION_STRING = "ConnectionString";
+
+        #endregion
     }
 }

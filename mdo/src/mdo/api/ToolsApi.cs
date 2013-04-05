@@ -1,21 +1,3 @@
-#region CopyrightHeader
-//
-//  Copyright by Contributors
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//         http://www.apache.org/licenses/LICENSE-2.0.txt
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-#endregion
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -152,6 +134,36 @@ namespace gov.va.medora.mdo.api
         public IndexedHashtable runRpc(ConnectionSet cxns, string rpcName, string[] paramValues, int[] paramTypes, bool[] paramEncrypted)
         {
             return cxns.query("IToolsDao", "runRpc", new object[] { rpcName, paramValues, paramTypes, paramEncrypted });
+        }
+
+        public IndexedHashtable getFile(ConnectionSet cxns, string fileNumber, bool includeXRefs)
+        {
+            return cxns.query("IToolsDao", "getFile", new object[] { fileNumber, includeXRefs });
+        }
+
+        public IndexedHashtable getXRefs(ConnectionSet cxns, string fileNumber)
+        {
+            return cxns.query("IToolsDao", "getXRefs", new object[] { new VistaFile() { FileNumber = fileNumber } });
+        }
+
+        public String create(AbstractConnection cxn, Dictionary<String, String> fieldsAndValues, String file, String parentRecordId = null)
+        {
+            return new VistaCrudDao(cxn).create(fieldsAndValues, file, parentRecordId);
+        }
+
+        public Dictionary<String, String> read(AbstractConnection cxn, String recordId, String recordFields, String file)
+        {
+            return new VistaCrudDao(cxn).read(recordId, recordFields, file);
+        }
+
+        public void update(AbstractConnection cxn, Dictionary<String, String> fieldsAndValues, String recordId, String file)
+        {
+            new VistaCrudDao(cxn).update(fieldsAndValues, recordId, file);
+        }
+
+        public void delete(AbstractConnection cxn, String recordId, String file)
+        {
+            new VistaCrudDao(cxn).delete(recordId, file);
         }
     }
 }

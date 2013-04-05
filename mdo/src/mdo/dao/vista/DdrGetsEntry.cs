@@ -1,21 +1,3 @@
-#region CopyrightHeader
-//
-//  Copyright by Contributors
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//         http://www.apache.org/licenses/LICENSE-2.0.txt
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-#endregion
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -96,6 +78,59 @@ namespace gov.va.medora.mdo.dao.vista
         {
             get { return flags; }
             set { flags = value; }
+        }
+
+        public Dictionary<String, String> convertToFieldValueDictionary(String[] ddrGetsEntryResults)
+        {
+            Dictionary<String, String> result = new Dictionary<string, string>();
+
+            if (ddrGetsEntryResults == null || ddrGetsEntryResults.Length <= 0)
+            {
+                return result;
+            }
+
+            // check for error
+            if (ddrGetsEntryResults.Length > 0)
+            {
+                if (String.Equals(ddrGetsEntryResults[0], "[ERROR]", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    if (ddrGetsEntryResults.Length > 1)
+                    {
+                        throw new MdoException(ddrGetsEntryResults[1]);
+                    }
+                    else
+                    {
+                        throw new MdoException("Unspecified DDR GETS ENTRY error");
+                    }
+                }
+            }
+            // end error
+            for (int i = 0; i < ddrGetsEntryResults.Length; i++)
+            {
+                String[] currentLinePieces = ddrGetsEntryResults[i].Split(new char[] { '^' });
+
+                if (currentLinePieces.Length < 4) // meta data column
+                {
+                    continue;
+                }
+
+                String currentFieldNo = currentLinePieces[2];
+                if (String.Equals("[WORD PROCESSING]", currentLinePieces[3], StringComparison.CurrentCultureIgnoreCase))
+                {
+                    StringBuilder sb = new StringBuilder();
+                    while (!String.Equals(ddrGetsEntryResults[++i], "$$END$$", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        sb.AppendLine(ddrGetsEntryResults[i]);
+                    }
+                    result.Add(currentFieldNo, sb.ToString());
+                }
+                else
+                {
+                    result.Add(currentFieldNo, currentLinePieces[3]);
+                }
+            }
+
+            return result;
         }
     }
 }

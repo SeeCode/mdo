@@ -75,6 +75,7 @@
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite, Version=1.0.80.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -111,6 +112,8 @@
     <Compile Include="src\mdo\CollectionSample.cs" />
     <Compile Include="src\mdo\conf\ConfigFileConstants.cs" />
     <Compile Include="src\mdo\conf\AppConfig.cs" />
+    <Compile Include="src\mdo\conf\LdapConfiguration.cs" />
+    <Compile Include="src\mdo\conf\MdoConfiguration.cs" />
     <Compile Include="src\mdo\conf\MsSqlConfiguration.cs" />
     <Compile Include="src\mdo\conf\OracleConfiguration.cs" />
     <Compile Include="src\mdo\conf\AbstractSqlConfiguration.cs" />
@@ -234,6 +237,7 @@
     <Compile Include="src\mdo\dao\sql\zipcodeDB\ZipcodeConnection.cs" />
     <Compile Include="src\mdo\dao\sql\zipcodeDB\ZipcodeDao.cs" />
     <Compile Include="src\mdo\dao\tcpip\SocketConnection.cs" />
+    <Compile Include="src\mdo\dao\vista\CrossRef.cs" />
     <Compile Include="src\mdo\dao\vista\fhie\FhieChemHemDao.cs" />
     <Compile Include="src\mdo\dao\ICytologyReportDao.cs" />
     <Compile Include="src\mdo\dao\vista\VistaChemHemDao.cs" />
@@ -267,6 +271,7 @@
     <Compile Include="src\mdo\dao\vista\VistaConnection.cs" />
     <Compile Include="src\mdo\dao\vista\VistaConstants.cs" />
     <Compile Include="src\mdo\dao\vista\VistaConsultDao.cs" />
+    <Compile Include="src\mdo\dao\vista\VistaCrudDao.cs" />
     <Compile Include="src\mdo\dao\vista\VistaDaoFactory.cs" />
     <Compile Include="src\mdo\dao\vista\VistaDateTimeIterator.cs" />
     <Compile Include="src\mdo\dao\vista\VistaDirectConnectStrategy.cs" />
@@ -483,6 +488,7 @@
     <Compile Include="src\utils\AssertionGenerator.cs" />
     <Compile Include="src\utils\DateUtils.cs" />
     <Compile Include="src\utils\FileIOUtils.cs" />
+    <Compile Include="src\utils\JsonUtils.cs" />
     <Compile Include="src\utils\mock\MockXmlSource.cs" />
     <Compile Include="src\utils\ResourceUtils.cs" />
     <Compile Include="src\utils\SSTCryptographer.cs" />
