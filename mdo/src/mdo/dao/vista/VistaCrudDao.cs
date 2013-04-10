@@ -37,7 +37,7 @@ namespace gov.va.medora.mdo.dao.vista
             query.Operation = "EDIT";
             query.Args = new string[]
             {
-                vistaFile + "^.01^" + recordIen + ",^@" // per API docs, setting .01 field to "@" deletes record
+                vistaFile + "^.01^" + recordIen + "^@" // per API docs, setting .01 field to "@" deletes record
             };
             return query;
 
@@ -56,9 +56,40 @@ namespace gov.va.medora.mdo.dao.vista
         /// <returns>The IEN of the new record</returns>
         public String create(Dictionary<String, String> fieldsAndValues, String vistaFile, String iens = null)
         {
+            Dictionary<String, String> wpFieldsAndValues = findWpFields(fieldsAndValues);
             DdrFiler request = buildCreateRequest(fieldsAndValues, vistaFile, iens);
             String response = request.execute();
-            return toCreateUpdateDeleteRecordResponse(response);
+            String result = toCreateUpdateDeleteRecordResponse(response);
+            // if we get this far, create succeeded! to make the API easier to use, enable user to pass WP fields in dictionary
+            foreach (String key in wpFieldsAndValues.Keys)
+            {
+                addWordProcessing(vistaFile, key, String.Concat(result, ",", iens), wpFieldsAndValues[key]);
+            }
+            return result;
+        }
+
+        internal Dictionary<string, string> findWpFields(Dictionary<string, string> fieldsAndValues)
+        {
+            Dictionary<String, String> result = new Dictionary<String, String>();
+            foreach (String key in fieldsAndValues.Keys)
+            {
+                if (key.Contains("WP"))
+                {
+                    result.Add(key, fieldsAndValues[key]);
+                }
+            }
+            foreach (String key in result.Keys) // now remove all wp fields because we don't want to include those in the vanilla create/update
+            {
+                fieldsAndValues.Remove(key);
+            }
+            return result;
+        }
+
+        public void addWordProcessing(String vistaFile, String vistaField, String iens, String wpText)
+        {
+            DdrWpFiler request = buildAddWpRequest(vistaFile, vistaField, iens, wpText);
+            String response = request.execute();
+            toCreateUpdateDeleteRecordResponse(response);
         }
 
         internal String toCreateUpdateDeleteRecordResponse(string response)
@@ -97,12 +128,32 @@ namespace gov.va.medora.mdo.dao.vista
             {
                 if (String.IsNullOrEmpty(iens))
                 {
-                    ddr.Args[index++] = vistaFile + "^" + key + "^+1,^" + fieldsAndValues[key]; // e.g. [0]: 2^.01^+1,PATIENT,NEW  [1]: 2^.09^+1,^222113333
+                    ddr.Args[index++] = vistaFile + "^" + key + "^+1,^" + fieldsAndValues[key]; // e.g. [0]: 2^.01^+1,PATIENT,NEW^DDROOT(1)  [1]: 2^.09^+1,^222113333
                 }
                 else
                 {
-                    ddr.Args[index++] = vistaFile + "^" + key + "^+1," + iens + ",^" + fieldsAndValues[key]; // e.g. [0]: 2^.01^+1,PATIENT,NEW  [1]: 2^.09^+1,^222113333
+                    ddr.Args[index++] = vistaFile + "^" + key + "^+1," + iens + "^" + fieldsAndValues[key]; // e.g. [0]: 2^.01^+1,PATIENT,NEW  [1]: 2^.09^+1,^222113333
                 }
+            }
+
+            return ddr;
+        }
+
+        internal DdrWpFiler buildAddWpRequest(String vistaFile, String field, String iens, String wpText)
+        {
+            String[] lines = StringUtils.split(wpText, StringUtils.CRLF);
+
+            DdrWpFiler ddr = new DdrWpFiler(_cxn);
+            ddr.Operation = "EDIT"; // both "ADD" and "EDIT" seem to work just fine
+            ddr.Params = new DictionaryHashList();
+            if (field.Contains("WP")) // if this was called from create or update, it probably contains "WP" to denote this as a special field so we should remove that
+            {
+                field = field.Replace("WP", "");
+            }
+            ddr.Params.Add("1", vistaFile + "^" + field + "^" + iens + "^DDRROOT(1)"); // taken from FileMan Delphi Components pascal code
+            for (int i = 0; i < lines.Length; i++)
+            {
+                ddr.Params.Add("1," + (i + 1).ToString(), lines[i]); // taken from FileMan Delphi Components pascal code
             }
 
             return ddr;
@@ -119,24 +170,20 @@ namespace gov.va.medora.mdo.dao.vista
         /// <param name="fields">Separate fields with a semicolon - e.g.: .01;.02;9  Leave blank to retrieve all fields</param>
         /// <param name="vistaFile">The Vista file number</param>
         /// <returns>Dictionary<String, String></returns>
-        public Dictionary<String, String> read(String recordIen, String fields, String vistaFile)
+        public Dictionary<String, String> read(String recordIen, String fields, String vistaFile, String flags = null)
         {
-            DdrGetsEntry ddr = new DdrGetsEntry(_cxn);
-            ddr.Fields = String.IsNullOrEmpty(fields) ? "*" : fields;
-            ddr.File = vistaFile;
-            ddr.Flags = "I";
-            ddr.Iens = String.Concat(recordIen, ",");
+            DdrGetsEntry ddr = buildReadRequest(recordIen, fields, vistaFile);
             String[] results = ddr.execute();
             return ddr.convertToFieldValueDictionary(results);
         }
 
-        internal DdrGetsEntry buildReadRequest(String recordIen, String fields, String vistaFile)
+        internal DdrGetsEntry buildReadRequest(String recordIen, String fields, String vistaFile, String flags = null)
         {
             DdrGetsEntry ddr = new DdrGetsEntry(_cxn);
             ddr.Fields = String.IsNullOrEmpty(fields) ? "*" : fields;
             ddr.File = vistaFile;
-            ddr.Flags = "I";
-            ddr.Iens = String.Concat(recordIen, ",");
+            ddr.Flags = String.IsNullOrEmpty(flags) ? "IN" : flags;
+            ddr.Iens = recordIen.EndsWith(",") ? recordIen : String.Concat(recordIen, ","); // helper to add trailing comma if not present
             return ddr;
         }
 
@@ -146,9 +193,19 @@ namespace gov.va.medora.mdo.dao.vista
 
         public void update(Dictionary<String, String> fieldsAndValues, String ien, String vistaFile)
         {
-            DdrFiler request = buildUpdateRequest(fieldsAndValues, ien, vistaFile);
-            String response = request.execute();
-            toCreateUpdateDeleteRecordResponse(response); // should throw exception on failure
+            Dictionary<String, String> wpFieldsAndValues = findWpFields(fieldsAndValues);
+            if (fieldsAndValues.Count > 0) // need to check this in case we were only updating WP fields
+            {
+                DdrFiler request = buildUpdateRequest(fieldsAndValues, ien, vistaFile);
+                String response = request.execute();
+                toCreateUpdateDeleteRecordResponse(response); // should throw exception on failure
+            }
+            // if we get this far, create succeeded! to make the API easier to use, enable user to pass WP fields in dictionary
+            foreach (String key in wpFieldsAndValues.Keys)
+            {
+                addWordProcessing(vistaFile, key, ien, wpFieldsAndValues[key]);
+                fieldsAndValues.Add(key, wpFieldsAndValues[key]); // want to add this back to original dict so that we don't permanently change it's state
+            }
         }
 
         internal DdrFiler buildUpdateRequest(Dictionary<String, String> fieldsAndValues, String ien, String vistaFile)
@@ -160,7 +217,7 @@ namespace gov.va.medora.mdo.dao.vista
             ddr.Args = new String[fieldsAndValues.Count];
             foreach (String key in fieldsAndValues.Keys)
             {
-                ddr.Args[index++] = vistaFile + "^" + key + "^" + ien + ",^" + fieldsAndValues[key]; // e.g. [0]: 2^.01^5,^PATIENT,NEW  [1]: 2^.09^5,^222113333
+                ddr.Args[index++] = vistaFile + "^" + key + "^" + ien + "^" + fieldsAndValues[key]; // e.g. [0]: 2^.01^5,^PATIENT,NEW  [1]: 2^.09^5,^222113333
             }
 
             return ddr;

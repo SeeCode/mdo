@@ -38,9 +38,10 @@ namespace gov.va.medora.mdo.dao.vista
             DictionaryHashList lst = new DictionaryHashList();
             for (int i = 0; i < Args.Length; i++)
             {
-                lst.Add(Convert.ToString(i+1), Args[i]);
+                lst.Add(Convert.ToString(i + 1), Args[i]);
             }
             vq.addParameter(vq.LIST, lst);
+            //vq.addParameter(vq.LITERAL, "E"); // this is where we'd put the flags if they seemed to be useful - tried a few combinations but they seemed to only cause issues
             return vq;
         }
 
@@ -49,5 +50,33 @@ namespace gov.va.medora.mdo.dao.vista
             MdoQuery request = buildRequest();
             return this.execute(request);
         }
+    }
+
+    public class DdrWpFiler : DdrQuery
+    {
+        public DdrWpFiler(AbstractConnection cxn) : base(cxn) { }
+
+        public DictionaryHashList Params { get; set; }
+
+        public String Operation { get; set; }
+
+        public MdoQuery buildRequest()
+        {
+            if (String.IsNullOrEmpty(this.Operation))
+            {
+                throw new ArgumentNullException("Must have an operation");
+            }
+            VistaQuery vq = new VistaQuery("DDR FILER");
+            vq.addParameter(vq.LITERAL, Operation);
+            vq.addParameter(vq.LIST, this.Params);
+            return vq;
+        }
+
+        public string execute()
+        {
+            MdoQuery request = buildRequest();
+            return this.execute(request);
+        }
+
     }
 }
