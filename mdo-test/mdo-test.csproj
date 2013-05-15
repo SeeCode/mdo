@@ -102,6 +102,7 @@
     <Compile Include="src\mdo\TestUser.cs" />
     <Compile Include="src\mdo\utils\DateUtilsTest.cs" />
     <Compile Include="src\mdo\utils\FileIOUtilsTest.cs" />
+    <Compile Include="src\mdo\utils\JsonUtilsTest.cs" />
     <Compile Include="src\mdo\utils\ResourceUtilsTest.cs" />
     <Compile Include="src\mdo\utils\SSTCryptographerTest.cs" />
     <Compile Include="src\mdo\utils\StringUtilsTest.cs" />
